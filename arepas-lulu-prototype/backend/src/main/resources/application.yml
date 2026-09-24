@@ -1,0 +1,25 @@
+spring:
+  application:
+    name: arepas-lulu-api
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:mariadb://localhost:3306/arepas_lulu}
+    username: ${SPRING_DATASOURCE_USERNAME:arepas}
+    password: ${SPRING_DATASOURCE_PASSWORD:arepas_dev}
+    driver-class-name: org.mariadb.jdbc.Driver
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        format_sql: true
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+server:
+  port: 8080
+
+logging:
+  level:
+    org.hibernate.SQL: INFO
