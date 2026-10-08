@@ -7,7 +7,7 @@ import { useCatalogEvents } from '../../hooks/useCatalogEvents.js'
 
 const emptyForm = {
   nombre: '',
-  categoria: 'Arepas',
+  categoria: 'Comidas',
   descripcion: '',
   precio: '',
   disponible: true,
@@ -150,7 +150,7 @@ export default function ProductCatalogPage() {
             <label>
               Categoría
               <select value={form.categoria} onChange={(e) => setForm({ ...form, categoria: e.target.value })}>
-                <option>Arepas</option>
+                <option>Comidas</option>
                 <option>Bebidas</option>
                 <option>Complementos</option>
                 <option>Postres</option>

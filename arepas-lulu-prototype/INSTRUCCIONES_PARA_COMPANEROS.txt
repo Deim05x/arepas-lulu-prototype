@@ -1,0 +1,178 @@
+INSTRUCCIONES PARA EJECUTAR AREPAS LULU
+========================================
+
+Proyecto: Arepas Lulu - Prototipo F-01 y F-02
+
+Este proyecto permite:
+- Administrar productos, precios y disponibilidad.
+- Registrar pedidos por mesa.
+- Consultar el historial de pedidos.
+
+
+OPCION RECOMENDADA: DOCKER
+===========================
+
+Requisitos:
+- Docker Desktop instalado.
+- Docker Desktop debe estar abierto y ejecutandose.
+- Puertos libres: 3000, 8080 y 3306.
+
+1. Clonar el repositorio:
+
+   git clone URL_DEL_REPOSITORIO
+
+2. Entrar a la carpeta del proyecto:
+
+   cd arepas-lulu-prototype
+
+3. Levantar todos los servicios:
+
+   docker compose up --build
+
+La primera ejecucion puede tardar porque Docker descarga las imagenes y construye los servicios.
+
+4. Abrir la aplicacion en el navegador:
+
+   http://localhost:3000
+
+Servicios disponibles:
+- Aplicacion web: http://localhost:3000
+- API: http://localhost:8080/api
+- Base de datos MariaDB: localhost:3306
+
+
+COMO PROBAR EL FLUJO PRINCIPAL
+==============================
+
+1. Abrir la seccion Catalogo.
+2. Crear un producto con nombre, categoria y precio.
+3. Confirmar la creacion en el cuadro de dialogo.
+4. Editar el precio si es necesario.
+5. Abrir Pedido por mesa.
+6. Escribir el numero de mesa.
+7. Seleccionar uno o varios productos.
+8. Agregar cantidades y observaciones.
+9. Pulsar Revisar y confirmar.
+10. Confirmar y enviar el pedido a cocina.
+11. Revisar el identificador, estado e historial de la mesa.
+
+Reglas del precio:
+- Se acepta cualquier valor entre $0 y $100.000.
+- No se aceptan valores negativos.
+- No se aceptan valores superiores a $100.000.
+
+
+DETENER LA APLICACION
+=====================
+
+En la terminal donde esta ejecutandose Docker, pulsar Ctrl+C.
+
+Tambien se puede detener con:
+
+   docker compose down
+
+Para detener y borrar tambien los datos de MariaDB:
+
+   docker compose down -v
+
+ATENCION: docker compose down -v elimina la base de datos y todos los pedidos/productos guardados.
+
+
+EJECUCION LOCAL SIN DOCKER
+===========================
+
+Esta opcion usa H2 en memoria. Los datos se pierden al detener el backend.
+
+Requisitos:
+- Java 21.
+- Maven 3.6.3 o superior.
+- Node.js 22 o superior.
+- npm.
+
+Terminal 1 - Backend:
+
+   cd backend
+   mvn spring-boot:run -Dspring-boot.run.profiles=local
+
+En Windows PowerShell, si Maven no esta agregado al PATH:
+
+   & "C:\Users\mateo\.maven\maven-3.9.15\bin\mvn.cmd" spring-boot:run "-Dspring-boot.run.profiles=local"
+
+Terminal 2 - Frontend:
+
+   cd frontend
+   npm install
+   npm run dev -- --host 127.0.0.1
+
+Abrir:
+
+   http://127.0.0.1:5173
+
+
+PROBLEMAS COMUNES
+=================
+
+1. Aparece "Failed to fetch" o "No se pudo conectar con la API".
+
+   Verificar que el backend este ejecutandose.
+   La API debe responder en:
+
+   http://localhost:8080/api/productos
+
+2. Docker no inicia.
+
+   - Abrir Docker Desktop.
+   - Verificar que los puertos 3000, 8080 y 3306 no esten ocupados.
+   - Ejecutar nuevamente: docker compose up --build
+
+3. El boton "Revisar y confirmar" no abre el resumen.
+
+   - Escribir primero el numero de mesa.
+   - Agregar al menos un producto.
+   - Verificar que el producto siga disponible.
+
+4. El catalogo aparece vacio.
+
+   Es normal en el perfil local H2. Crear productos desde la seccion Catalogo.
+   En Docker, el catalogo inicial se carga mediante las migraciones de MariaDB.
+
+5. Cambios recientes no aparecen en Docker.
+
+   Ejecutar:
+
+   docker compose down
+   docker compose up --build
+
+
+PRUEBAS AUTOMATIZADAS
+=====================
+
+Backend:
+
+   cd backend
+   mvn test
+
+Frontend:
+
+   cd frontend
+   npm run build
+
+Smoke test con Docker levantado, desde la raiz del proyecto:
+
+   ./scripts/smoke-test.sh
+
+En Windows PowerShell:
+
+   .\scripts\smoke-test.ps1
+
+
+DOCUMENTACION
+=============
+
+- README.md: descripcion general y arranque.
+- docs/architecture/C4.md: arquitectura C4.
+- docs/architecture/workspace.dsl: modelo Structurizr.
+- docs/traceability/TRACEABILITY.md: trazabilidad de requisitos.
+- docs/DELIVERY_EVIDENCE.md: evidencias y capturas para la entrega.
+
+Si encuentran un error, anoten el comando ejecutado, el mensaje completo y el sistema operativo utilizado.
