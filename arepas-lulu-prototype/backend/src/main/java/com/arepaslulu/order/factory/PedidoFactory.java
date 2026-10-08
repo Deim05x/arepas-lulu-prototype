@@ -8,6 +8,7 @@ import com.arepaslulu.catalog.domain.Producto;
 import com.arepaslulu.order.domain.EstadoPedido;
 import com.arepaslulu.order.domain.Pedido;
 import com.arepaslulu.order.domain.PedidoItem;
+import com.arepaslulu.order.domain.TipoServicio;
 import com.arepaslulu.order.dto.PedidoItemRequest;
 import com.arepaslulu.order.pricing.PricingStrategy;
 
@@ -20,8 +21,8 @@ public class PedidoFactory {
         this.pricingStrategy = pricingStrategy;
     }
 
-    public Pedido crear(int mesaNumero, List<ItemConProducto> items) {
-        Pedido pedido = new Pedido(mesaNumero, EstadoPedido.ENVIADO_COCINA);
+    public Pedido crear(Integer mesaNumero, TipoServicio tipoServicio, List<ItemConProducto> items) {
+        Pedido pedido = new Pedido(mesaNumero, tipoServicio, EstadoPedido.ENVIADO_COCINA);
         for (ItemConProducto item : items) {
             Producto producto = item.producto();
             PedidoItemRequest request = item.request();
@@ -34,6 +35,10 @@ public class PedidoFactory {
             ));
         }
         return pedido;
+    }
+
+    public Pedido crear(int mesaNumero, List<ItemConProducto> items) {
+        return crear(mesaNumero, TipoServicio.MESA, items);
     }
 
     private String limpiar(String text) {
