@@ -1,186 +1,97 @@
-# Arepas Lulú — Prototipo funcional F-01 + F-02
+# Arepas Lulú · sistema operativo integral
 
-Prototipo alineado con el **Plan Vivo de Requisitos** de Software II.
+Prototipo académico de Software II alineado con el **Plan Vivo de Requisitos**. La solución implementa las ocho funcionalidades vigentes mediante una SPA React, una API Spring Boot y MariaDB, documentadas con C4 y trazabilidad requisito → componente → endpoint → persistencia.
 
-## Alcance implementado
+## Funcionalidades implementadas
 
-- **F-01 — Administrar catálogo de productos y precios**
-  - Crear productos.
-  - Consultar catálogo.
-  - Editar nombre, categoría, descripción y precio.
-  - Cambiar disponibilidad operativa.
-  - Desactivar/ocultar productos mediante borrado lógico.
-  - Los productos inactivos/no disponibles no pueden agregarse a nuevos pedidos.
-- **F-02 — Registrar pedidos digitales por mesa**
-  - Seleccionar mesa.
-  - Agregar productos, cantidades y observaciones.
-  - Mantener el pedido en estado local en React antes de enviarlo.
-  - Mostrar resumen de confirmación.
-  - Persistir el pedido como `ENVIADO_COCINA`.
-  - Consultar pedidos registrados por identificador o mesa.
+| ID | Funcionalidad | Módulo |
+|---|---|---|
+| F-01 | Administrar catálogo de productos y precios | `catalog` |
+| F-02 | Registrar pedidos digitales por mesa | `order` |
+| F-03 | Gestionar cola de preparación (KDS) | `kitchen` |
+| F-04 | Liquidar órdenes, procesar pagos y facturar | `billing` |
+| F-05 | Cuadrar caja y reportar facturación DIAN | `reporting` |
+| F-06 | Gestionar pedidos a domicilio y clientes | `delivery` |
+| F-07 | Controlar stock de ingredientes en tiempo real | `inventory` |
+| F-08 | Monitorear ocupación y asignación de mesas | `table` |
 
-> Nota de alcance: la gestión detallada de inventario de ingredientes pertenece a **F-07**. En F-01 se maneja la disponibilidad operativa del producto, suficiente para impedir su selección cuando no está disponible.
+## Flujo integrado
 
-## Stack
+1. F-01 mantiene productos, precios y disponibilidad.
+2. F-07 mantiene ingredientes y recetas por producto.
+3. F-02 confirma un pedido; el backend valida catálogo, descuenta ingredientes de la receta y ocupa la mesa.
+4. F-03 mueve el pedido por `ENVIADO_COCINA → EN_PREPARACION → LISTO → SERVIDO`.
+5. F-04 registra un único pago, genera factura y libera la mesa.
+6. F-05 consolida caja por fecha y marca facturas como reportadas a DIAN (simulación académica, no integración real con el servicio DIAN).
+7. F-06 reutiliza el mismo motor de pedidos para `DOMICILIO` y agrega cliente, dirección, despacho y entrega.
+8. F-08 muestra el mapa de mesas y permite reservas/inhabilitación, además de los cambios automáticos por pedido/pago.
 
-- Java 21
-- Spring Boot 4.1.1
-- Spring MVC
-- Spring Data JPA / Hibernate
-- Bean Validation
-- Flyway
-- MariaDB 12.3.3 LTS
-- React 19.3
-- Vite 8.3
-- Nginx (imagen de producción del frontend)
-- Docker Compose
+## Arquitectura
 
-## Patrones de diseño utilizados
+- **Frontend:** React + Vite, SPA modular por funcionalidad.
+- **Backend:** Spring Boot / Java 21, monolito modular organizado por feature.
+- **Persistencia:** MariaDB + JPA para catálogo/pedidos y Repository con `JdbcTemplate` para módulos operativos.
+- **Migraciones:** Flyway.
+- **Comunicación:** REST/JSON; SSE para refresco del catálogo.
+- **Patrones:** Controller, Service Layer, Repository, DTO/Mapper, Factory, Strategy, Reducer, Observer/Pub-Sub, Dependency Injection.
+- **Documentación:** C4 niveles Contexto, Contenedores y Componentes.
 
-- **MVC / Controller**: capa HTTP.
-- **Service Layer**: casos de uso y reglas transaccionales.
-- **Repository**: acceso a persistencia.
-- **DTO**: desacopla API de entidades JPA.
-- **Mapper**: transforma dominio ↔ DTO.
-- **Factory Method / Factory**: construcción consistente de pedidos.
-- **Strategy**: cálculo de precio de cada ítem (`PricingStrategy`).
-- **Reducer (frontend)**: estado local del pedido antes de persistirlo.
-- **Observer / Publish-Subscribe**: SSE notifica cambios del catálogo a clientes web conectados.
-- **Dependency Injection**: composición de servicios y estrategias.
+Ver `docs/architecture/C4.md` y `docs/architecture/workspace.dsl`.
 
-## Estructura
-
-```text
-arepas-lulu-prototype/
-├── backend/                 # API Spring Boot
-├── frontend/                # SPA React
-├── docs/
-│   ├── architecture/        # C4 y decisiones
-│   └── traceability/        # BR → StR → SyR → SWR → implementación
-├── docker-compose.yml
-└── README.md
-```
-
-## Arranque recomendado con Docker
-
-Requisitos: Docker Engine + Docker Compose.
+## Ejecutar con Docker
 
 ```bash
+cd arepas-lulu-prototype
 docker compose up --build
 ```
-
-Servicios:
 
 - Web: http://localhost:3000
 - API: http://localhost:8080/api
 - MariaDB: localhost:3306
 
-Para detener:
+La migración `V3__full_operations.sql` crea pagos, facturas, clientes, domicilios, ingredientes, recetas y mesas, además de extender `pedidos` con `tipo_servicio`.
+
+## Ejecución local
 
 ```bash
-docker compose down
-```
-
-Para eliminar también los datos:
-
-```bash
-docker compose down -v
-```
-
-## Arranque para desarrollo local
-
-### 1. Base de datos
-
-```bash
-docker compose up -d mariadb
-```
-
-### 2. Backend
-
-Requisitos locales: Java 21 y Maven 3.6.3+.
-
-```bash
+# terminal 1
 cd backend
-mvn spring-boot:run
-```
+mvn spring-boot:run -Dspring-boot.run.profiles=local
 
-### 3. Frontend
-
-Requisitos locales: Node 22+ y npm.
-
-```bash
+# terminal 2
 cd frontend
 npm install
 npm run dev
 ```
 
-La SPA de desarrollo usa `http://localhost:8080/api` como API por defecto.
-
-### Ejecución local sin MariaDB
-
-Para una demostración local rápida puede usarse H2 en memoria. Los datos se pierden al detener el backend:
-
-```bash
-cd backend
-mvn spring-boot:run -Dspring-boot.run.profiles=local
-```
-
-El perfil `local` conserva la misma API y reglas de negocio, pero no sustituye la validación final sobre MariaDB.
-
-## Flujo de demostración
-
-1. Abrir **Catálogo**.
-2. Crear `Arepa Todo Terreno`, seleccionar categoría y precio.
-3. Editar su precio y comprobar el cambio.
-4. Marcar un producto como no disponible y verificar que deja de aparecer en el selector del pedido.
-5. Abrir **Pedido por mesa**.
-6. Seleccionar mesa, agregar dos o más productos, cantidades y observaciones.
-7. Revisar el resumen local.
-8. Confirmar el pedido.
-9. Verificar que la API devuelve un ID único y estado `ENVIADO_COCINA`.
-10. Consultar los pedidos de la mesa en el historial.
+El perfil local usa H2 en modo MySQL y ejecuta las mismas migraciones Flyway para conservar el esquema funcional completo.
 
 ## Endpoints principales
 
-### F-01 Catálogo
+- `/api/productos` · F-01
+- `/api/pedidos` · F-02
+- `/api/cocina/pedidos` · F-03
+- `/api/pagos` y `/api/facturas` · F-04
+- `/api/caja/resumen` y `/api/caja/dian` · F-05
+- `/api/clientes` y `/api/domicilios` · F-06
+- `/api/inventario/*` · F-07
+- `/api/mesas` · F-08
 
-```text
-GET    /api/productos
-GET    /api/productos?soloDisponibles=true
-GET    /api/productos/{id}
-GET    /api/productos/stream        # SSE de cambios del catálogo
-POST   /api/productos
-PUT    /api/productos/{id}
-PATCH  /api/productos/{id}/disponibilidad
-DELETE /api/productos/{id}
+## Reglas integradas destacadas
+
+- El precio final lo calcula el backend desde el catálogo vigente.
+- Un producto inactivo o no disponible no puede pedirse.
+- Si existe receta, F-07 valida y descuenta ingredientes dentro de la misma transacción del pedido.
+- Cocina aplica transiciones de estado controladas.
+- Solo se paga una orden lista/servida y no puede pagarse dos veces.
+- El pago crea factura y la mesa se libera automáticamente.
+- El reporte DIAN del prototipo **marca** facturas reportadas; no envía documentos a un proveedor externo real.
+
+## Verificación
+
+```bash
+cd backend && mvn test
+cd ../frontend && npm run build
 ```
 
-### F-02 Pedidos
-
-```text
-POST /api/pedidos
-GET  /api/pedidos/{id}
-GET  /api/pedidos?mesa=4
-GET  /api/pedidos
-```
-
-## Datos iniciales
-
-Flyway crea varias arepas/bebidas de ejemplo para poder probar F-02 inmediatamente.
-
-## Calidad y pruebas
-
-El backend contiene pruebas unitarias para servicios y reglas centrales. El repositorio incluye además un workflow de CI para compilar backend y frontend en GitHub Actions.
-
-## Arquitectura C4
-
-Ver:
-
-- `docs/architecture/C4.md`
-- `docs/architecture/workspace.dsl`
-
-## Trazabilidad
-
-Ver `docs/traceability/TRACEABILITY.md` para la relación:
-
-**F → BR → StR → SyR → SWR → componente → endpoint → tabla → prueba**.
+La trazabilidad detallada está en `docs/traceability/TRACEABILITY.md`.

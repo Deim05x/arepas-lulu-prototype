@@ -1,14 +1,41 @@
 import { useState } from 'react'
 import ProductCatalogPage from './modules/catalog/ProductCatalogPage.jsx'
 import OrderPage from './modules/orders/OrderPage.jsx'
+import KitchenPage from './modules/kitchen/KitchenPage.jsx'
+import BillingPage from './modules/billing/BillingPage.jsx'
+import ReportsPage from './modules/reports/ReportsPage.jsx'
+import DeliveryPage from './modules/delivery/DeliveryPage.jsx'
+import InventoryPage from './modules/inventory/InventoryPage.jsx'
+import TablesPage from './modules/tables/TablesPage.jsx'
 
 const tabs = [
-  { id: 'catalogo', label: 'Catálogo' },
-  { id: 'pedidos', label: 'Pedido por mesa' },
+  { id: 'catalogo', code: 'F-01', label: 'Catálogo', icon: '◫' },
+  { id: 'pedidos', code: 'F-02', label: 'Pedidos por mesa', icon: '✎' },
+  { id: 'cocina', code: 'F-03', label: 'Cocina · KDS', icon: '♨' },
+  { id: 'facturacion', code: 'F-04', label: 'Pagos y factura', icon: '$' },
+  { id: 'reportes', code: 'F-05', label: 'Caja y DIAN', icon: '▥' },
+  { id: 'domicilios', code: 'F-06', label: 'Domicilios', icon: '⌂' },
+  { id: 'inventario', code: 'F-07', label: 'Inventario', icon: '▦' },
+  { id: 'mesas', code: 'F-08', label: 'Mesas', icon: '◎' },
 ]
+
+function Page({ tab }) {
+  switch (tab) {
+    case 'catalogo': return <ProductCatalogPage />
+    case 'pedidos': return <OrderPage />
+    case 'cocina': return <KitchenPage />
+    case 'facturacion': return <BillingPage />
+    case 'reportes': return <ReportsPage />
+    case 'domicilios': return <DeliveryPage />
+    case 'inventario': return <InventoryPage />
+    case 'mesas': return <TablesPage />
+    default: return <ProductCatalogPage />
+  }
+}
 
 export default function App() {
   const [tab, setTab] = useState('catalogo')
+  const active = tabs.find((item) => item.id === tab)
 
   return (
     <div className="app-shell">
@@ -20,33 +47,30 @@ export default function App() {
               <path className="arepa-body" d="M8 29C8 17 18 8 32 8s24 9 24 21-10 22-24 22S8 41 8 29Z" />
               <path className="arepa-highlight" d="M18 22c4-6 10-9 17-9 6 0 11 2 15 6-5-2-10-3-15-3-6 0-12 2-17 6Z" />
               <circle className="arepa-detail" cx="24" cy="29" r="2" />
-              <circle className="arepa-detail" cx="34" cy="23" r="1.7" />
               <circle className="arepa-detail" cx="40" cy="33" r="2" />
-              <circle className="arepa-detail" cx="28" cy="39" r="1.5" />
             </svg>
           </div>
-          <div>
-            <strong>Arepas Lulú</strong>
-            <span>Prototipo operativo</span>
-          </div>
+          <div><strong>Arepas Lulú</strong><span>Operación integral</span></div>
         </div>
 
+        <div className="nav-caption">Plan Vivo · 8 funcionalidades</div>
         <nav className="nav-list" aria-label="Funcionalidades">
           {tabs.map((item) => (
-            <button
-              key={item.id}
-              className={`nav-item ${tab === item.id ? 'active' : ''}`}
-              onClick={() => setTab(item.id)}
-            >
-              <strong>{item.label}</strong>
+            <button key={item.id} className={`nav-item ${tab === item.id ? 'active' : ''}`} onClick={() => setTab(item.id)}>
+              <span className="nav-icon">{item.icon}</span>
+              <span className="nav-copy"><small>{item.code}</small><strong>{item.label}</strong></span>
             </button>
           ))}
         </nav>
-
+        <div className="sidebar-footer"><span className="live-dot" /> Spring Boot · MariaDB · React</div>
       </aside>
 
       <main className="main-content">
-        {tab === 'catalogo' ? <ProductCatalogPage /> : <OrderPage />}
+        <div className="topbar">
+          <div><span className="breadcrumb">Arepas Lulú / {active?.code}</span></div>
+          <div className="architecture-chip">C4 · Monolito modular</div>
+        </div>
+        <Page tab={tab} />
       </main>
     </div>
   )
