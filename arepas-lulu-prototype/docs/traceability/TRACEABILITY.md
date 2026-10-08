@@ -1,61 +1,82 @@
-# Trazabilidad del prototipo
+# Trazabilidad de requisitos → implementación
 
-La implementación conserva los identificadores usados en el Plan Vivo.
+La fuente de alcance es el Plan Vivo actualizado con F-01 a F-08. Este archivo no reemplaza el Excel: documenta dónde se materializa cada funcionalidad en código.
 
-## F-01 — Administrar catálogo de productos y precios
+## F-01 · Administrar catálogo de productos y precios
 
-| Nivel | Requisito | Implementación |
-|---|---|---|
-| BR-01 | Mantener consistencia en la oferta y asegurar cobros con precios actualizados. | Módulo `catalog` + persistencia `productos`. |
-| StR-01 | Administración crea, edita, oculta productos y modifica precios centralmente. | `ProductCatalogPage` + `ProductoController` + `ProductoService`. |
-| SyR-01 | Gestionar maestro de artículos y reflejar cambios en la interfaz. | API REST + React refresca catálogo después de mutaciones. |
-| SWR-01 | Registrar producto con datos básicos. | `POST /api/productos`. |
-| SWR-02 | Definir y actualizar precio vigente. | `POST/PUT /api/productos`; precio almacenado en `DECIMAL(12,2)`. |
-| SWR-03 | Marcar producto disponible/no disponible. | `PATCH /api/productos/{id}/disponibilidad`. |
-| SWR-04 | Impedir seleccionar productos no disponibles. | `GET ?soloDisponibles=true` + validación backend al crear pedido. |
-| SWR-05 | Registrar última actualización. | `productos.updated_at` con callbacks JPA. |
+Cadena refinada existente: **F-01 → BR-01 → StR-01 → SyR-01 → SWR-01…SWR-05**.
 
-### Verificación F-01
+- Frontend: `frontend/src/modules/catalog/ProductCatalogPage.jsx`
+- Backend: `catalog/web/ProductoController.java` → `catalog/service/ProductoService.java` → `ProductoRepository`
+- Persistencia: `productos`
+- Endpoints: `GET/POST/PUT /api/productos`, `PATCH /disponibilidad`, `DELETE`
+- Integración: F-02 usa precio/disponibilidad autoritativos; SSE refresca catálogo.
 
-- Crear `Arepa Todo Terreno` y comprobar que aparece en catálogo.
-- Cambiar su precio y comprobar el valor actualizado.
-- Cambiar `disponible=false` y comprobar que no aparece como seleccionable en F-02.
-- Intentar enviar manualmente un pedido con producto no disponible y comprobar rechazo `409`.
+## F-02 · Registrar pedidos digitales por mesa
 
-## F-02 — Registrar pedidos digitales por mesa
+Cadena refinada existente: **F-02 → BR-02 → StR-02 → SyR-02 → SWR-06…SWR-11**.
 
-| Nivel | Requisito | Implementación |
-|---|---|---|
-| BR-02 | Eliminar errores de escritura/omisiones y reducir reprocesos. | Pedido estructurado y persistente. |
-| StR-02 | Mesero selecciona productos, cantidades, observaciones y envía a preparación. | `OrderPage` con `useReducer`. |
-| SyR-02 | Abrir orden por mesa, agregar ítems y dejarla `ENVIADO_COCINA`. | `PedidoService#create`. |
-| SWR-06 | Generar identificador único. | PK autoincremental MariaDB. |
-| SWR-07 | Asociar pedido a una mesa. | `pedidos.mesa_numero`. |
-| SWR-08 | Registrar productos, cantidades y preferencias. | `pedido_items`. |
-| SWR-09 | Mostrar resumen antes de enviar. | Paso de confirmación en React. |
-| SWR-10 | Guardar pedido confirmado con estado. | `pedidos.estado = ENVIADO_COCINA`. |
-| SWR-11 | Consultar pedido por mesa o ID. | `GET /api/pedidos`, `GET /{id}`, filtro `mesa`. |
+- Frontend: `frontend/src/modules/orders/OrderPage.jsx` + `orderReducer.js`
+- Backend: `order/web/PedidoController.java` → `PedidoService` → `PedidoFactory/PricingStrategy` → `PedidoRepository`
+- Persistencia: `pedidos`, `pedido_items`
+- Endpoint: `POST/GET /api/pedidos`
+- Integración nueva: consume F-07 por receta y ocupa F-08 para pedidos `MESA`.
 
-### Verificación F-02
+## F-03 · Gestionar cola de preparación (KDS)
 
-- Construir un pedido con al menos 2 ítems y una observación.
-- Confirmar el resumen.
-- Comprobar respuesta con ID, mesa, total y estado `ENVIADO_COCINA`.
-- Consultar el pedido por ID.
-- Consultar la mesa y comprobar que aparece en el historial.
+- Frontend: `frontend/src/modules/kitchen/KitchenPage.jsx`
+- Backend: `kitchen/web/CocinaController.java` → `CocinaService` → `PedidoRepository`
+- Endpoint: `GET /api/cocina/pedidos`, `PATCH /api/cocina/pedidos/{id}/estado`
+- Estados controlados: `ENVIADO_COCINA → EN_PREPARACION → LISTO → SERVIDO` y cancelación antes de servir.
+- Persistencia: columna `pedidos.estado`.
 
-## Matriz técnica
+## F-04 · Liquidar órdenes, procesar pagos y facturar
 
-| SWR | Componente backend | Frontend | Endpoint | Persistencia | Prueba |
-|---|---|---|---|---|---|
-| SWR-01 | ProductoService | ProductForm | POST `/productos` | `productos` | Alta válida |
-| SWR-02 | ProductoService | ProductForm | PUT `/productos/{id}` | `productos.precio` | Cambio de precio |
-| SWR-03 | ProductoService | ProductTable | PATCH `/disponibilidad` | `productos.disponible` | Toggle disponibilidad |
-| SWR-04 | PedidoService | OrderPage | GET disponibles + POST pedido | `productos` | Rechazo no disponible |
-| SWR-05 | Producto | ProductTable | mutaciones producto | `updated_at` | Timestamp cambia |
-| SWR-06 | PedidoRepository | OrderSuccess | POST `/pedidos` | `pedidos.id` | ID único |
-| SWR-07 | PedidoService | OrderPage | POST `/pedidos` | `mesa_numero` | Asociación mesa |
-| SWR-08 | PedidoFactory | OrderCart | POST `/pedidos` | `pedido_items` | Ítems y notas |
-| SWR-09 | — | OrderSummary | antes de POST | estado local | Confirmación UI |
-| SWR-10 | PedidoFactory | OrderSuccess | POST `/pedidos` | `estado` | Estado final |
-| SWR-11 | PedidoQuery | OrderHistory | GET `/pedidos` | lectura | Consulta ID/mesa |
+- Frontend: `frontend/src/modules/billing/BillingPage.jsx`
+- Backend: `billing/web/BillingController.java` → `BillingService` → `BillingRepository`
+- Endpoints: `POST /api/pagos`, `GET /api/facturas/pedido/{pedidoId}`
+- Reglas: orden debe estar `LISTO/SERVIDO`, un solo pago por pedido, cambio en efectivo, factura única.
+- Persistencia: `pagos`, `facturas`; pedido pasa a `PAGADO`; F-08 libera mesa.
+
+## F-05 · Cuadrar caja y reportar facturación DIAN
+
+- Frontend: `frontend/src/modules/reports/ReportsPage.jsx`
+- Backend: `reporting/web/ReporteController.java` → `ReporteService` → `BillingRepository`
+- Endpoints: `GET /api/caja/resumen`, `POST /api/caja/dian`
+- Persistencia: agrega `pagos/facturas`; actualiza `facturas.reportada_dian`.
+- Alcance: el reporte DIAN es una **simulación académica de estado**, no una integración real con el proveedor/servicio de facturación electrónica.
+
+## F-06 · Gestionar pedidos a domicilio y clientes
+
+- Frontend: `frontend/src/modules/delivery/DeliveryPage.jsx`
+- Backend: `delivery/web/DeliveryController.java` → `DeliveryService` → `DeliveryRepository`
+- Endpoints: `/api/clientes`, `/api/domicilios`, `/api/domicilios/{id}/estado`
+- Persistencia: `clientes`, `domicilios` + pedido reutilizado con `tipo_servicio=DOMICILIO`.
+- Integración: crear domicilio invoca F-02 para mantener una sola lógica de precios, disponibilidad e inventario.
+
+## F-07 · Controlar stock de ingredientes en tiempo real
+
+- Frontend: `frontend/src/modules/inventory/InventoryPage.jsx`
+- Backend: `inventory/web/InventoryController.java` → `InventoryService` → `InventoryRepository`
+- Endpoints: ingredientes, ajustes y recetas bajo `/api/inventario`.
+- Persistencia: `ingredientes`, `recetas`.
+- Integración: dentro de la transacción de F-02 se calculan requerimientos `cantidad receta × cantidad pedida`; si falta stock se rechaza el pedido y si alcanza se descuenta.
+
+## F-08 · Monitorear ocupación y asignación de mesas
+
+- Frontend: `frontend/src/modules/tables/TablesPage.jsx`
+- Backend: `table/web/MesaController.java` → `MesaService` → `MesaRepository`
+- Endpoint: `GET/PATCH /api/mesas`.
+- Estados: `DISPONIBLE`, `OCUPADA`, `RESERVADA`, `INACTIVA`.
+- Integración: F-02 ocupa automáticamente y F-04 libera automáticamente.
+
+## Vista transversal
+
+```text
+F-01 catálogo ─┐
+F-07 inventario ├─> F-02 pedido ─> F-03 cocina ─> F-04 pago/factura ─> F-05 caja/DIAN
+F-08 mesas ────┘       ↑                         │
+                        └──── F-06 domicilio ─────┘
+```
+
+La arquitectura evita duplicar reglas: catálogo e inventario se validan en servidor, domicilio reutiliza `PedidoService` y pago/factura usa el mismo agregado `Pedido` que cocina.

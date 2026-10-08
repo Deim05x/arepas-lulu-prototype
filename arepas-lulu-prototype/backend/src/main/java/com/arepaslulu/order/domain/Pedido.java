@@ -31,6 +31,10 @@ public class Pedido {
     private Integer mesaNumero;
 
     @Enumerated(EnumType.STRING)
+    @Column(name = "tipo_servicio", nullable = false, length = 30)
+    private TipoServicio tipoServicio = TipoServicio.MESA;
+
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 40)
     private EstadoPedido estado;
 
@@ -46,13 +50,19 @@ public class Pedido {
     protected Pedido() {
     }
 
-    public Pedido(Integer mesaNumero, EstadoPedido estado) {
+    public Pedido(Integer mesaNumero, TipoServicio tipoServicio, EstadoPedido estado) {
         this.mesaNumero = mesaNumero;
+        this.tipoServicio = tipoServicio == null ? TipoServicio.MESA : tipoServicio;
         this.estado = estado;
+    }
+
+    public Pedido(Integer mesaNumero, EstadoPedido estado) {
+        this(mesaNumero, TipoServicio.MESA, estado);
     }
 
     @PrePersist
     void onCreate() {
+        if (tipoServicio == null) tipoServicio = TipoServicio.MESA;
         this.createdAt = Instant.now();
     }
 
@@ -62,8 +72,17 @@ public class Pedido {
         total = total.add(item.getSubtotal());
     }
 
+    public void cambiarEstado(EstadoPedido nuevoEstado) {
+        this.estado = nuevoEstado;
+    }
+
+    public boolean esDeMesa() {
+        return tipoServicio == TipoServicio.MESA && mesaNumero != null && mesaNumero > 0;
+    }
+
     public Long getId() { return id; }
     public Integer getMesaNumero() { return mesaNumero; }
+    public TipoServicio getTipoServicio() { return tipoServicio; }
     public EstadoPedido getEstado() { return estado; }
     public BigDecimal getTotal() { return total; }
     public Instant getCreatedAt() { return createdAt; }

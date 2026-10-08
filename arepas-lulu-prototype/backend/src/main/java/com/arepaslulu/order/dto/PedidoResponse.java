@@ -5,10 +5,12 @@ import java.time.Instant;
 import java.util.List;
 
 import com.arepaslulu.order.domain.EstadoPedido;
+import com.arepaslulu.order.domain.TipoServicio;
 
 public record PedidoResponse(
         Long id,
-        int mesaNumero,
+        Integer mesaNumero,
+        TipoServicio tipoServicio,
         EstadoPedido estado,
         BigDecimal total,
         Instant createdAt,
