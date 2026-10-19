@@ -91,7 +91,7 @@ El perfil local usa H2 en modo MySQL y ejecuta las mismas migraciones Flyway par
 
 ```bash
 cd backend && mvn test
-cd ../frontend && npm run build
+cd ../frontend && npm test && npm run build
 ```
 
 La trazabilidad detallada está en `docs/traceability/TRACEABILITY.md`.
