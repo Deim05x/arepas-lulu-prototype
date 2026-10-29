@@ -14,7 +14,7 @@ public class PedidoMapper {
     public PedidoResponse toResponse(Pedido pedido) {
         List<PedidoItemResponse> items = pedido.getItems().stream()
                 .map(item -> new PedidoItemResponse(
-                        item.getProducto().getId(),
+                        item.getProductoId(),
                         item.getProductoNombre(),
                         item.getCantidad(),
                         item.getPrecioUnitario(),

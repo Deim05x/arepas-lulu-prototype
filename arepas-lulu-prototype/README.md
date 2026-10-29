@@ -95,3 +95,17 @@ cd ../frontend && npm test && npm run build
 ```
 
 La trazabilidad detallada está en `docs/traceability/TRACEABILITY.md`.
+
+## Refactorización de F-02
+
+F-02 fue refactorizada para proteger el consumo de inventario ante pedidos concurrentes y reducir el acoplamiento entre `order`, el DTO HTTP y la entidad JPA de catálogo. La intervención conserva los endpoints y el esquema existente, y agrega pruebas de contrato HTTP y concurrencia.
+
+- [Resumen de la refactorización](docs/refactorizacion/README.md)
+- [Diagnóstico, priorización y evidencia](docs/refactorizacion/DIAGNOSTICO_REFACTORIZACION.md)
+
+Verificación de la intervención:
+
+```text
+Tests run: 10, Failures: 0, Errors: 0, Skipped: 0
+BUILD SUCCESS
+```

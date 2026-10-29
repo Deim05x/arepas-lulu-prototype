@@ -30,3 +30,13 @@ cd ../frontend && npm run build
 ```
 
 Además del test automatizado, la demo integrada anterior funciona como prueba de aceptación del prototipo completo.
+
+## Cobertura automatizada de F-02 después de la refactorización
+
+- `PedidoControllerIntegrationTest`: POST HTTP 201, GET por ID, GET por mesa, validación HTTP 400 y regla de negocio HTTP 409.
+- `PedidoConcurrencyIntegrationTest`: dos pedidos compiten por la última unidad; exactamente uno se confirma y el stock termina en cero.
+- `PedidoFactoryTest`: conserva producto, total, estado inicial y observación.
+- `PrototypeFlowIntegrationTest`: conserva la integración F-01 → F-02.
+- `FullOperationsIntegrationTest`: conserva el flujo F-01 → F-08.
+
+Resultado verificado: **10 pruebas, 0 fallos, 0 errores y 0 omitidas**.

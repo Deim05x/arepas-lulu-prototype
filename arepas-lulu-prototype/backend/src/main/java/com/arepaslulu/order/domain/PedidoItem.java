@@ -2,8 +2,6 @@ package com.arepaslulu.order.domain;
 
 import java.math.BigDecimal;
 
-import com.arepaslulu.catalog.domain.Producto;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -26,9 +24,8 @@ public class PedidoItem {
     @JoinColumn(name = "pedido_id", nullable = false)
     private Pedido pedido;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "producto_id", nullable = false)
-    private Producto producto;
+    @Column(name = "producto_id", nullable = false)
+    private Long productoId;
 
     @Column(name = "producto_nombre", nullable = false, length = 120)
     private String productoNombre;
@@ -48,9 +45,10 @@ public class PedidoItem {
     protected PedidoItem() {
     }
 
-    public PedidoItem(Producto producto, int cantidad, BigDecimal precioUnitario, BigDecimal subtotal, String observacion) {
-        this.producto = producto;
-        this.productoNombre = producto.getNombre();
+    public PedidoItem(Long productoId, String productoNombre, int cantidad,
+                      BigDecimal precioUnitario, BigDecimal subtotal, String observacion) {
+        this.productoId = productoId;
+        this.productoNombre = productoNombre;
         this.cantidad = cantidad;
         this.precioUnitario = precioUnitario;
         this.subtotal = subtotal;
@@ -62,7 +60,7 @@ public class PedidoItem {
     }
 
     public Long getId() { return id; }
-    public Producto getProducto() { return producto; }
+    public Long getProductoId() { return productoId; }
     public String getProductoNombre() { return productoNombre; }
     public Integer getCantidad() { return cantidad; }
     public BigDecimal getPrecioUnitario() { return precioUnitario; }

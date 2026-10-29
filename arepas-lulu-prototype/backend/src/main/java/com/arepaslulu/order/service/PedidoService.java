@@ -17,8 +17,8 @@ import com.arepaslulu.order.domain.Pedido;
 import com.arepaslulu.order.domain.TipoServicio;
 import com.arepaslulu.order.dto.PedidoRequest;
 import com.arepaslulu.order.dto.PedidoResponse;
+import com.arepaslulu.order.factory.LineaPedido;
 import com.arepaslulu.order.factory.PedidoFactory;
-import com.arepaslulu.order.factory.PedidoFactory.ItemConProducto;
 import com.arepaslulu.order.mapper.PedidoMapper;
 import com.arepaslulu.order.repository.PedidoRepository;
 import com.arepaslulu.table.service.MesaService;
@@ -54,11 +54,16 @@ public class PedidoService {
         Integer mesa = validarContexto(tipo, request.mesaNumero());
         Map<Long, Producto> productos = cargarProductos(request);
 
-        List<ItemConProducto> items = request.items().stream()
+        List<LineaPedido> items = request.items().stream()
                 .map(item -> {
                     Producto producto = productos.get(item.productoId());
                     validarOrdenable(producto);
-                    return new ItemConProducto(item, producto);
+                    return new LineaPedido(
+                            producto.getId(),
+                            producto.getNombre(),
+                            producto.getPrecio(),
+                            item.cantidad(),
+                            item.observacion());
                 })
                 .toList();
 

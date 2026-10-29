@@ -13,18 +13,18 @@ import com.arepaslulu.order.domain.TipoServicio;
 public interface PedidoRepository extends JpaRepository<Pedido, Long> {
 
     @Override
-    @EntityGraph(attributePaths = {"items", "items.producto"})
+    @EntityGraph(attributePaths = "items")
     java.util.Optional<Pedido> findById(Long id);
 
-    @EntityGraph(attributePaths = {"items", "items.producto"})
+    @EntityGraph(attributePaths = "items")
     List<Pedido> findAllByOrderByCreatedAtDesc();
 
-    @EntityGraph(attributePaths = {"items", "items.producto"})
+    @EntityGraph(attributePaths = "items")
     List<Pedido> findByMesaNumeroOrderByCreatedAtDesc(Integer mesaNumero);
 
-    @EntityGraph(attributePaths = {"items", "items.producto"})
+    @EntityGraph(attributePaths = "items")
     List<Pedido> findByEstadoInOrderByCreatedAtAsc(Collection<EstadoPedido> estados);
 
-    @EntityGraph(attributePaths = {"items", "items.producto"})
+    @EntityGraph(attributePaths = "items")
     List<Pedido> findByTipoServicioOrderByCreatedAtDesc(TipoServicio tipoServicio);
 }

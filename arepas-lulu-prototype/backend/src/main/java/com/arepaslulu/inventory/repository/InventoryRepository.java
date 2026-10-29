@@ -43,6 +43,14 @@ public class InventoryRepository {
         jdbc.update("UPDATE ingredientes SET stock_actual=?, updated_at=CURRENT_TIMESTAMP WHERE id=?", nuevoStock, id);
     }
 
+    public int descontarStockSiDisponible(Long id, BigDecimal cantidad) {
+        return jdbc.update("""
+                UPDATE ingredientes
+                SET stock_actual=stock_actual-?, updated_at=CURRENT_TIMESTAMP
+                WHERE id=? AND stock_actual>=?
+                """, cantidad, id, cantidad);
+    }
+
     public List<RecetaRow> receta(Long productoId) {
         return jdbc.query("SELECT r.ingrediente_id,i.nombre,i.unidad,r.cantidad FROM recetas r JOIN ingredientes i ON i.id=r.ingrediente_id WHERE r.producto_id=? ORDER BY i.nombre",
                 (rs, rowNum) -> new RecetaRow(rs.getLong("ingrediente_id"), rs.getString("nombre"), rs.getString("unidad"), rs.getBigDecimal("cantidad")), productoId);

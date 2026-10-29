@@ -81,16 +81,23 @@ public class InventoryService {
         for (Map.Entry<Long, BigDecimal> requerido : requeridos.entrySet()) {
             IngredienteRow ingrediente = obtenerIngrediente(requerido.getKey());
             if (ingrediente.stockActual().compareTo(requerido.getValue()) < 0) {
-                throw new BusinessRuleException("Stock insuficiente de '" + ingrediente.nombre() + "'. Disponible: "
-                        + ingrediente.stockActual() + " " + ingrediente.unidad() + ", requerido: " + requerido.getValue());
+                throw stockInsuficiente(ingrediente, requerido.getValue());
             }
             ingredientes.put(ingrediente.id(), ingrediente);
         }
 
         for (Map.Entry<Long, BigDecimal> requerido : requeridos.entrySet()) {
             IngredienteRow ingrediente = ingredientes.get(requerido.getKey());
-            repository.establecerStock(ingrediente.id(), ingrediente.stockActual().subtract(requerido.getValue()));
+            int actualizados = repository.descontarStockSiDisponible(ingrediente.id(), requerido.getValue());
+            if (actualizados != 1) {
+                throw stockInsuficiente(obtenerIngrediente(ingrediente.id()), requerido.getValue());
+            }
         }
+    }
+
+    private BusinessRuleException stockInsuficiente(IngredienteRow ingrediente, BigDecimal requerido) {
+        return new BusinessRuleException("Stock insuficiente de '" + ingrediente.nombre() + "'. Disponible: "
+                + ingrediente.stockActual() + " " + ingrediente.unidad() + ", requerido: " + requerido);
     }
 
     private IngredienteRow obtenerIngrediente(Long id) {
