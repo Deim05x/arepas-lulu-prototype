@@ -100,8 +100,9 @@ La trazabilidad detallada está en `docs/traceability/TRACEABILITY.md`.
 
 F-02 fue refactorizada para proteger el consumo de inventario ante pedidos concurrentes y reducir el acoplamiento entre `order`, el DTO HTTP y la entidad JPA de catálogo. La intervención conserva los endpoints y el esquema existente, y agrega pruebas de contrato HTTP y concurrencia.
 
-- [Resumen de la refactorización](docs/refactorizacion/README.md)
-- [Diagnóstico, priorización y evidencia](docs/refactorizacion/DIAGNOSTICO_REFACTORIZACION.md)
+- [README de la refactorización F-02](README_REFACTORIZACION_F02.md)
+- [README del diagnóstico y cierre F-02](README_DIAGNOSTICO_F02.md)
+- [Carpeta de documentación detallada](docs/refactorizacion/README.md)
 
 Verificación de la intervención:
 
